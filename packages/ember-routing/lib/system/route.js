@@ -27,6 +27,7 @@ import {
   calculateCacheKey,
   prefixRouteNameArg
 } from '../utils';
+import RouteInfo from './route_info';
 
 function K() { return this; }
 
@@ -2064,8 +2065,8 @@ let Route = EmberObject.extend(ActionHandler, Evented, {
       }
     }
 
-    let renderOptions = buildRenderOptions(this, isDefaultRender, name, options);
-    this.connections.push(renderOptions);
+    let routeInfo = buildRenderOptions(this, isDefaultRender, name, options);
+    this.connections.push(routeInfo);
     run.once(this.router, '_setOutlets');
   },
 
@@ -2119,7 +2120,7 @@ let Route = EmberObject.extend(ActionHandler, Evented, {
         }
       }
     });
-	```
+        ```
 
     @method disconnectOutlet
     @param {Object|String} options the options hash or outlet name
@@ -2271,14 +2272,7 @@ function buildRenderOptions(route, isDefaultRender, _name, options) {
     into = undefined;
   }
 
-  let renderOptions = {
-    owner,
-    into,
-    outlet,
-    name,
-    controller,
-    template: template || route._topLevelViewTemplate,
-  };
+  let renderOptions = new RouteInfo(name, controller, template || route._topLevelViewTemplate, outlet, into);
 
   if (DEBUG) {
     let LOG_VIEW_LOOKUPS = get(route.router, 'namespace.LOG_VIEW_LOOKUPS');
