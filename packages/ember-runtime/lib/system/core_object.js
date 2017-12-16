@@ -16,6 +16,7 @@ import {
 } from 'ember-utils';
 import {
   descriptorFor,
+  isDescriptor,
   get,
   meta,
   peekMeta,
@@ -408,16 +409,14 @@ CoreObject.PrototypeMixin = Mixin.create({
     @public
   */
   isDestroyed: descriptor({
+    configurable: true,
+    enumerable: false,
+
     get() {
       return peekMeta(this).isSourceDestroyed();
     },
 
     set(value) {
-      // prevent setting while applying mixins
-      if (value !== null && typeof value === 'object' && value.isDescriptor) {
-        return;
-      }
-
       assert(`You cannot set \`${this}.isDestroyed\` directly, please use \`.destroy()\`.`, false);
     }
   }),
@@ -433,16 +432,14 @@ CoreObject.PrototypeMixin = Mixin.create({
     @public
   */
   isDestroying: descriptor({
+    configurable: true,
+    enumerable: false,
+
     get() {
       return peekMeta(this).isSourceDestroying();
     },
 
     set(value) {
-      // prevent setting while applying mixins
-      if (value !== null && typeof value === 'object' && value.isDescriptor) {
-        return;
-      }
-
       assert(`You cannot set \`${this}.isDestroying\` directly, please use \`.destroy()\`.`, false);
     }
   }),

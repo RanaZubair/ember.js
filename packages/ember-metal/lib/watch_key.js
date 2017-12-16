@@ -94,11 +94,12 @@ export function unwatchKey(obj, keyName, _meta) {
   if (count === 1) {
     meta.writeWatching(keyName, 0);
 
-    let possibleDesc = obj[keyName];
-    let isDescriptor = possibleDesc !== null &&
-      typeof possibleDesc === 'object' && possibleDesc.isDescriptor;
+    let possibleDesc = descriptorFor(obj, keyName, meta);
+    let isDescriptor = possibleDesc !== undefined;
 
-    if (isDescriptor && possibleDesc.didUnwatch) { possibleDesc.didUnwatch(obj, keyName, meta); }
+    if (isDescriptor && possibleDesc.didUnwatch) {
+      possibleDesc.didUnwatch(obj, keyName, meta);
+    }
 
     if (typeof obj.didUnwatchProperty === 'function') {
       obj.didUnwatchProperty(keyName);

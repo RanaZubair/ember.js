@@ -294,7 +294,7 @@ function followAlias(obj, desc, descs, values) {
   if (descs[altKey] || values[altKey]) {
     value = values[altKey];
     desc  = descs[altKey];
-  } else if ((possibleDesc = obj[altKey]) && possibleDesc !== null && typeof possibleDesc === 'object' && possibleDesc.isDescriptor) {
+  } else if ((possibleDesc = descriptorFor(obj, altKey)) !== undefined) {
     desc  = possibleDesc;
     value = undefined;
   } else {
@@ -364,7 +364,9 @@ function applyMixin(obj, mixins, partial) {
 
     if (desc === undefined && value === undefined) { continue; }
 
-    replaceObserversAndListeners(obj, key, value);
+    if (descriptorFor(obj, key, meta) === undefined) {
+      replaceObserversAndListeners(obj, key, value);
+    }
 
     if (detectBinding(key)) {
       meta.writeBindings(key, value);
