@@ -69,12 +69,6 @@ export function INHERITING_GETTER_FUNCTION(name) {
   return IGETTER_FUNCTION;
 }
 
-const DESCRIPTOR_TRAP = symbol('DESCRIPTOR_TRAP');
-
-export function isDescriptorTrap(value) {
-  return value !== null && typeof value === 'object' && value[DESCRIPTOR_TRAP] === true;
-}
-
 function DESCRIPTOR_GETTER_FUNCTION(desc, keyName) {
   if (EMBER_METAL_ES5_GETTERS) {
     return function CPGETTER_FUNCTION() {
@@ -88,9 +82,7 @@ function DESCRIPTOR_GETTER_FUNCTION(desc, keyName) {
       /* globals Proxy */
       trap = (obj) => new Proxy(desc, {
         get(desc, property) {
-          if (property === DESCRIPTOR_TRAP) {
-            return true;
-          } else if (property === 'toString' || property == 'valueOf' || (Symbol && property === Symbol.toPrimitive)) {
+          if (property === 'toString' || property == 'valueOf' || (Symbol && property === Symbol.toPrimitive)) {
             return () => '[COMPUTED]';
           }
 
@@ -122,7 +114,6 @@ function DESCRIPTOR_GETTER_FUNCTION(desc, keyName) {
     } else {
       trap = (obj) => {
         let proxy = {
-          [DESCRIPTOR_TRAP]: true,
           toString() { return '[COMPUTED]'; },
           valueOf() { return '[COMPUTED]'; }
         };
@@ -166,11 +157,6 @@ function DESCRIPTOR_GETTER_FUNCTION(desc, keyName) {
 
     return function CPGETTER_FUNCTION() {
       return trap(this);
-    };
-  } else {
-    // Legacy, production mode: pass through the descriptor
-    return function CPGETTER_FUNCTION() {
-      return desc;
     };
   }
 }
@@ -245,12 +231,14 @@ export function defineProperty(obj, keyName, desc, data, meta) {
         get: DESCRIPTOR_GETTER_FUNCTION(desc, keyName),
         set: MANDATORY_SETTER_FUNCTION(keyName)
       });
-    } else {
+    } else if (EMBER_METAL_ES5_GETTERS || MANDATORY_GETTER) {
       Object.defineProperty(obj, keyName, {
         configurable: true,
         enumerable: true,
         get: DESCRIPTOR_GETTER_FUNCTION(desc, keyName)
       });
+    } else {
+      obj[keyName] = desc;
     }
 
     meta.writeDescriptors(keyName, desc);
@@ -269,7 +257,7 @@ export function defineProperty(obj, keyName, desc, data, meta) {
         set: MANDATORY_SETTER_FUNCTION(keyName),
         get: DEFAULT_GETTER_FUNCTION(keyName)
       });
-    } else if (wasDescriptor) {
+    } else if (wasDescriptor && (EMBER_METAL_ES5_GETTERS || MANDATORY_GETTER)) {
       Object.defineProperty(obj, keyName, {
         configurable: true,
         enumerable: true,
